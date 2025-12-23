@@ -1966,27 +1966,32 @@ def render_position_sizer():
 # ============================================================================
 
 def main():
-    """Main application"""
+    """Main application - Dashboard loads automatically"""
     
-    if not AuthManager.check_password():
-        return
+    # We removed the AuthManager check here to skip the password screen
     
-    # Initialize
+    # Initialize app data
     PortfolioManager.initialize()
     AlertsManager.load_alerts()
     
-    # Check alerts
+    # Set a default session state so the app doesn't crash without the login info
+    if "username" not in st.session_state:
+        st.session_state.username = "Admin"
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = True
+    
+    # Check for triggered price alerts
     triggered = AlertsManager.check_alerts()
     if triggered:
         logger.info(f"Alerts triggered: {triggered}")
     
-    # Sidebar
+    # Sidebar setup
     st.sidebar.title("📈 Trading Platform v4.0")
     st.sidebar.caption(f"Welcome, {st.session_state.username}")
     st.sidebar.caption(f"Updated: {datetime.now().strftime('%H:%M:%S')}")
     st.sidebar.divider()
     
-    # Navigation
+    # Navigation menu
     app_mode = st.sidebar.radio(
         "Navigate",
         [
@@ -2002,12 +2007,12 @@ def main():
         label_visibility="collapsed"
     )
     
-    # Utilities
+    # Sidebar tools (Journal, Alerts, etc.)
     quick_tips()
     
     st.sidebar.divider()
     
-    # Settings
+    # Settings for Watchlist
     with st.sidebar.expander("⚙️ Settings", expanded=False):
         watchlist_input = st.text_area(
             "Watchlist",
@@ -2016,11 +2021,9 @@ def main():
         )
         custom_watchlist = [t.strip().upper() for t in watchlist_input.split(",") if t.strip()]
     
-    # Logout
-    if st.sidebar.button("🚪 Logout", use_container_width=True):
-        AuthManager.logout()
+    # Removed the Logout button since there is no longer a login screen
     
-    # Route
+    # Route to the correct page
     watchlist = custom_watchlist or Config().DEFAULT_WATCHLIST
     
     if app_mode == "🏠 Dashboard":

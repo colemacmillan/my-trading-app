@@ -114,14 +114,25 @@ class AuthManager:
     
     @staticmethod
     def load_credentials() -> Dict[str, str]:
-        """Load stored credentials"""
+        """Load stored credentials from Cloud Secrets or local file"""
+        # 1. Try to load from Streamlit Cloud Secrets (The Priority)
+        if "credentials" in st.secrets:
+            return dict(st.secrets["credentials"])
+        
+        # 2. Try to load from local environment variable
+        env_pass = os.getenv("MY_TRADER_PASSWORD")
+        if env_pass:
+            return {"admin": AuthManager.hash_password(env_pass)}
+
+        # 3. Fallback to local file if it exists
         try:
             if os.path.exists('credentials.json'):
                 with open('credentials.json', 'r') as f:
                     return json.load(f)
         except:
             pass
-        # Default credentials (hashed "mytrader2024")
+
+        # 4. Final safety fallback (hashed "mytrader2024")
         default_hash = "3c9909afec25354d551dae21590bb26e38d53f2173b8d3dc3eee4c047e7ab1c1"
         return {"admin": default_hash}
     

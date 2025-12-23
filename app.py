@@ -20,11 +20,13 @@ class DataFetcher:
     def fetch_stock_data(ticker, period='1y'):
         try:
             stock = yf.Ticker(ticker)
+            # We fetch the data here, but we do NOT return the 'stock' object
             hist = stock.history(period=period)
             info = stock.info
-            return stock, info, hist, None
+            # Return ONLY info, hist, and None (for error)
+            return info, hist, None 
         except Exception as e:
-            return None, None, None, str(e)
+            return None, None, str(e)
 
 # 3. PORTFOLIO MANAGER (This fixes your NameError)
 class PortfolioManager:
@@ -47,7 +49,13 @@ def render_dashboard(watchlist):
     st.title("🏠 Trading Dashboard")
     st.write(f"Monitoring: {', '.join(watchlist)}")
     for ticker in watchlist:
-        _, info, hist, _ = DataFetcher.fetch_stock_data(ticker)
+        # We removed the first "_" because we are no longer returning the ticker object
+        info, hist, error = DataFetcher.fetch_stock_data(ticker)
+        
+        if error:
+            st.error(f"Error loading {ticker}: {error}")
+            continue
+            
         if info and 'currentPrice' in info:
             st.metric(ticker, f"${info['currentPrice']:.2f}")
 

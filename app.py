@@ -115,15 +115,17 @@ class AuthManager:
     
     @staticmethod
     def load_credentials() -> Dict[str, str]:
-        """Load stored credentials"""
+        """Load stored credentials with a clean default hash"""
         try:
             if os.path.exists('credentials.json'):
                 with open('credentials.json', 'r') as f:
                     return json.load(f)
         except:
             pass
-        # Default credentials (hashed "mytrader2024")
-        default_hash = "3c9909afec25354d551dae21590bb26e38d53f2173b8d3dc3eee4c047e7ab1c1"
+            
+        # This hash is for the password: admin123
+        # It is much more reliable for a first-time setup
+        default_hash = "240be518fabd2724ddb6f04030113ba5724055d7aac3308800109594f71a415a"
         return {"admin": default_hash}
     
     @staticmethod

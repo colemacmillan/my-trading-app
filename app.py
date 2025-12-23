@@ -139,63 +139,26 @@ class AuthManager:
     
     @staticmethod
     def check_password() -> bool:
-        """Check authentication with improved security"""
+        """Plain Text Bypass for Immediate Access"""
         if "authenticated" not in st.session_state:
             st.session_state.authenticated = False
-            st.session_state.username = None
         
         if st.session_state.authenticated:
             return True
-        
-        with st.container():
-            st.title("🔐 Trading Intelligence Platform")
-            st.caption("Secure access to your personal trading hub")
             
-            col1, col2, col3 = st.columns([1, 2, 1])
-            with col2:
-                username = st.text_input("Username", value="admin")
-                password = st.text_input("Password", type="password", help="Default: mytrader2024")
-                
-                col_btn1, col_btn2 = st.columns(2)
-                
-                with col_btn1:
-                    if st.button("🔓 Login", use_container_width=True):
-                        creds = AuthManager.load_credentials()
-                        hashed = AuthManager.hash_password(password)
-                        
-                        if username in creds and creds[username] == hashed:
-                            st.session_state.authenticated = True
-                            st.session_state.username = username
-                            st.rerun()
-                        else:
-                            st.error("❌ Invalid credentials")
-                
-                with col_btn2:
-                    if st.button("🔑 Change Password", use_container_width=True):
-                        st.session_state.show_change_password = True
-                
-                # Change password dialog
-                if st.session_state.get('show_change_password', False):
-                    st.divider()
-                    st.subheader("Change Password")
-                    old_pass = st.text_input("Current Password", type="password", key="old_pass")
-                    new_pass = st.text_input("New Password", type="password", key="new_pass")
-                    confirm_pass = st.text_input("Confirm Password", type="password", key="confirm_pass")
-                    
-                    if st.button("Update Password"):
-                        creds = AuthManager.load_credentials()
-                        old_hash = AuthManager.hash_password(old_pass)
-                        
-                        if username in creds and creds[username] == old_hash:
-                            if new_pass == confirm_pass and len(new_pass) >= 8:
-                                creds[username] = AuthManager.hash_password(new_pass)
-                                AuthManager.save_credentials(creds)
-                                st.success("✅ Password updated successfully!")
-                                st.session_state.show_change_password = False
-                            else:
-                                st.error("❌ Passwords don't match or too short (min 8 chars)")
-                        else:
-                            st.error("❌ Current password incorrect")
+        st.title("🔐 App Unlock")
+        user = st.text_input("Username", value="admin")
+        pas = st.text_input("Password", type="password")
+        
+        if st.button("Unlock"):
+            # This check is 100% plain text - no hashing or files needed
+            if user == "admin" and pas == "1234":
+                st.session_state.authenticated = True
+                st.session_state.username = "admin"
+                st.rerun()
+            else:
+                st.error("❌ Still not matching. Double check you typed '1234'")
+        return False
         
         return False
     

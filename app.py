@@ -105,113 +105,45 @@ st.set_page_config(
 # ============================================================================
 
 class AuthManager:
-    """Secure authentication with password hashing"""
-    
-    @staticmethod
-    def hash_password(password: str) -> str:
-        """Hash password using SHA-256"""
-        return hashlib.sha256(password.encode()).hexdigest()
-    
-    @staticmethod
-    def load_credentials() -> Dict[str, str]:
-        """Load stored credentials from Cloud Secrets or local file"""
-        # 1. Try to load from Streamlit Cloud Secrets (The Priority)
-        if "credentials" in st.secrets:
-            return dict(st.secrets["credentials"])
-        
-        # 2. Try to load from local environment variable
-        env_pass = os.getenv("MY_TRADER_PASSWORD")
-        if env_pass:
-            return {"admin": AuthManager.hash_password(env_pass)}
-
-        # 3. Fallback to local file if it exists
-        try:
-            if os.path.exists('credentials.json'):
-                with open('credentials.json', 'r') as f:
-                    return json.load(f)
-        except:
-            pass
-
-        # 4. Final safety fallback (hashed "mytrader2024")
-        default_hash = "3c9909afec25354d551dae21590bb26e38d53f2173b8d3dc3eee4c047e7ab1c1"
-        return {"admin": default_hash}
-    
-    @staticmethod
-    def save_credentials(creds: Dict[str, str]):
-        """Save credentials"""
-        try:
-            with open('credentials.json', 'w') as f:
-                json.dump(creds, f)
-        except Exception as e:
-            logger.error(f"Error saving credentials: {str(e)}")
+    """Simplified, Cloud-First Authentication"""
     
     @staticmethod
     def check_password() -> bool:
-        """Check authentication with improved security"""
+        """Check authentication using Streamlit Secrets directly"""
         if "authenticated" not in st.session_state:
             st.session_state.authenticated = False
-            st.session_state.username = None
+            st.session_state.username = "Admin"  # Default name for dashboard metrics
         
         if st.session_state.authenticated:
             return True
         
+        # UI for Login
         with st.container():
-            st.title("🔐 Trading Intelligence Platform")
-            st.caption("Secure access to your personal trading hub")
+            st.title("🔐 My Private Terminal")
+            st.caption("Enter your Inner Circle access key")
             
             col1, col2, col3 = st.columns([1, 2, 1])
             with col2:
-                username = st.text_input("Username", value="admin")
-                password = st.text_input("Password", type="password", help="Default: mytrader2024")
+                # Fetches password from Streamlit Cloud Secrets
+                master_key = st.secrets.get("MY_TRADER_PASSWORD", "mytrader2024")
                 
-                col_btn1, col_btn2 = st.columns(2)
+                input_pass = st.text_input("Access Key", type="password")
                 
-                with col_btn1:
-                    if st.button("🔓 Login", use_container_width=True):
-                        creds = AuthManager.load_credentials()
-                        hashed = AuthManager.hash_password(password)
-                        
-                        if username in creds and creds[username] == hashed:
-                            st.session_state.authenticated = True
-                            st.session_state.username = username
-                            st.rerun()
-                        else:
-                            st.error("❌ Invalid credentials")
-                
-                with col_btn2:
-                    if st.button("🔑 Change Password", use_container_width=True):
-                        st.session_state.show_change_password = True
-                
-                # Change password dialog
-                if st.session_state.get('show_change_password', False):
-                    st.divider()
-                    st.subheader("Change Password")
-                    old_pass = st.text_input("Current Password", type="password", key="old_pass")
-                    new_pass = st.text_input("New Password", type="password", key="new_pass")
-                    confirm_pass = st.text_input("Confirm Password", type="password", key="confirm_pass")
-                    
-                    if st.button("Update Password"):
-                        creds = AuthManager.load_credentials()
-                        old_hash = AuthManager.hash_password(old_pass)
-                        
-                        if username in creds and creds[username] == old_hash:
-                            if new_pass == confirm_pass and len(new_pass) >= 8:
-                                creds[username] = AuthManager.hash_password(new_pass)
-                                AuthManager.save_credentials(creds)
-                                st.success("✅ Password updated successfully!")
-                                st.session_state.show_change_password = False
-                            else:
-                                st.error("❌ Passwords don't match or too short (min 8 chars)")
-                        else:
-                            st.error("❌ Current password incorrect")
+                if st.button("🔓 Unlock Terminal", use_container_width=True):
+                    # Direct comparison - no hashing mismatches
+                    if input_pass == master_key:
+                        st.session_state.authenticated = True
+                        st.rerun()
+                    else:
+                        st.error("❌ Invalid Key")
+                        st.info("Check your Streamlit Cloud 'Secrets' settings.")
         
         return False
-    
+
     @staticmethod
     def logout():
-        """Logout user"""
+        """Reset authentication status"""
         st.session_state.authenticated = False
-        st.session_state.username = None
         st.rerun()
 
 # ============================================================================
